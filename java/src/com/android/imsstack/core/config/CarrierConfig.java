@@ -1814,6 +1814,15 @@ public class CarrierConfig {
                     case "BUILD":
                         sb.append(Build.ID.replaceAll("\\s", ""));
                         break;
+                    case "BOOTLOADER":
+                        sb.append(getFirmwareVersion(0));
+                        break;
+                    case "BOOTLOADER_LAST8":
+                        sb.append(getFirmwareVersion(8));
+                        break;
+                    case "BOOTLOADER_LAST3":
+                        sb.append(getFirmwareVersion(3));
+                        break;
                     case "IMEI":
                         sb.append(getImei(slotId));
                         break;
@@ -1837,6 +1846,25 @@ public class CarrierConfig {
 
             mConfig.putString(CarrierConfigManager.Ims.KEY_IMS_USER_AGENT_STRING, sb.toString());
         }
+    }
+
+    /**
+     * The device firmware version (ro.bootloader), as some carriers expect it in the User-Agent:
+     * on devices that boot a vendor bootloader this is the version of the firmware the device
+     * was last flashed with, which stays accurate when the system image is replaced. Falls back
+     * to Build.ID when there is no bootloader version. {@code lastChars} > 0 keeps only that many
+     * trailing characters.
+     */
+    private static String getFirmwareVersion(int lastChars) {
+        String version = Build.BOOTLOADER;
+        if (TextUtils.isEmpty(version) || Build.UNKNOWN.equals(version)) {
+            version = Build.ID;
+        }
+        version = version.replaceAll("\\s", "");
+        if (lastChars > 0 && version.length() > lastChars) {
+            version = version.substring(version.length() - lastChars);
+        }
+        return version;
     }
 
     private static String getMccMnc(int slotId) {
